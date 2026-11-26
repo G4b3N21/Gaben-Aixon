@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- iPhone PWA & Icon settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gaben Aixon">
+    <meta name="theme-color" content="#0E0E10">
+    <link rel="apple-touch-icon" href="ikon.jpg">
+    <link rel="icon" type="image/jpeg" href="ikon.jpg">
+    <link rel="manifest" href="manifest.json">
+    
+    <title>Gaben Aixon</title>
+    <style>
+        :root {
+            --bg-main: #0E0E10;
+            --bg-card: #1A1A1E;
+            --bg-input: #242429;
+            --accent: #FADB15;
+            --accent-soft: rgba(250, 219, 21, 0.15);
+            --ok: #34D399;
+            --warn: #FB923C;
+            --urgent: #F87171;
+            --text-main: #F2F2F7;
+            --text-muted: #8E8E93;
+            --border: #2A2A30;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 90px) 16px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0 12px 0;
+        }
+
+        h1 {
+            font-size: 23px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        h1 span { color: var(--accent); }
+
+        .data-btn {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .hero-card {
+            background: linear-gradient(145deg, #1E1D18, #1A1A1E);
+            border: 1px solid rgba(250, 219, 21, 0.3);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+
+        .hero-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .hero-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hero-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 3px;
+        }
+
+        .hero-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .hero-count-box {
+            text-align: right;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .hero-count-num {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .hero-count-lbl {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .bar-track {
+            width: 100%;
+            height: 6px;
+            background-color: var(--bg-input);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background-color: var(--accent);
+            border-radius: 6px;
+            transition: width 0.25s ease;
+        }
+        .search-wrap {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 34px 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 0;
+        }
+
+        .search-input:focus { border-color: var(--accent); }
+
+        .search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 15px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .cat-filter-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-bottom: 10px;
+            scrollbar-width: none;
+        }
+
+        .cat-filter-bar::-webkit-scrollbar { display: none; }
+
+        .filter-pill {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 16px;
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .filter-pill.active {
+            background-color: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .view-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .view-btn {
+            background-color: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 9px 6px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .view-btn.active {
+            background-color: var(--accent-soft);
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .item-card {
+            background-color: var(--bg-card);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 9px;
+            border: 1px solid var(--border);
+            border-left-width: 5px;
+            border-left-color: var(--accent);
+        }
+
+        .item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .item-left { min-width: 0; flex: 1; }
+
+        .item-title {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .item-cat-tag {
+            font-size: 10px;
+            background: var(--bg-input);
+            color: var(--text-muted);
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .item-note {
+            font-size: 12px;
+            color: #A1A1AA;
+            margin-top: 4px;
+            line-height: 1.35;
+        }
+
+        .item-right {
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .item-days {
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .item-days-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .item-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .mini-track {
+            flex: 1;
+            height: 5px;
+            background-color: var(--bg-input);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .mini-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .quick-done-btn {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom, 16px) + 16px);
+            right: 20px;
+            background-color: var(--accent);
+            color: #0E0E10;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 22px;
+            font-size: 16px;
+            font-weight: 800;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.82);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal-sheet {
+            background-color: var(--bg-card);
+            width: 100%;
+            max-width: 500px;
+            max-height: 88vh;
+            overflow-y: auto;
+            border-radius: 22px 22px 0 0;
+            padding: 20px 20px calc(env(safe-area-inset-bottom, 20px) + 20px) 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .modal-title { font-size: 18px; font-weight: 700; }
+
+        .close-modal {
+            background: var(--bg-input);
+            border: none;
+            color: var(--text-muted);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .type-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .type-btn {
+            padding: 11px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .type-btn.active {
+            background: var(--accent-soft);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 12px;
+            padding: 13px 14px;
+            font-size: 16px;
+            font-family: inherit;
+            margin-bottom: 10px;
+            outline: none;
+            color-scheme: dark;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+        .field-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 0 0 5px 2px;
+            font-weight: 600;
+        }
+
+        .cat-select-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .cat-select-row select { margin-bottom: 0; flex: 1; }
+
+        .quick-add-cat-btn {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            border-radius: 12px;
+            padding: 0 16px;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .color-picker-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 4px 2px;
+        }
+
+        .color-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .color-swatch.selected {
+            border-color: #FFFFFF;
+            transform: scale(1.15);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background-color: var(--accent);
+            color: #0E0E10;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .btn-danger {
+            width: 100%;
+            background-color: rgba(248, 113, 113, 0.15);
+            color: var(--urgent);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            background-color: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .cat-mgr-section {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .cat-mgr-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cat-add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .cat-add-row input { margin-bottom: 0; padding: 10px 12px; font-size: 14px; }
+
+        .cat-add-row button {
+            background: var(--accent);
+            color: #0E0E10;
+            border: none;
+            border-radius: 12px;
+            padding: 0 16px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .cat-chip-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .cat-chip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .cat-icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 35px 15px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1><span>Gaben</span> Aixon</h1>
+        <button class="data-btn" onclick="openDataModal()">Data & Categories</button>
+    </header>
+
+    <div class="hero-card" id="heroCard">
+        <div class="hero-top">
+            <span>⏳ Next Deadline</span>
+            <span id="heroCatLabel">General</span>
+        </div>
+        <div class="hero-main">
+            <div style="min-width:0;">
+                <div class="hero-title" id="heroTitle">No active deadlines</div>
+                <div class="hero-sub" id="heroSub">Tap + Add to create your first countdown</div>
+            </div>
+            <div class="hero-count-box" onclick="toggleTimeFormat()">
+                <div class="hero-count-num" id="heroDaysNum">—</div>
+                <div class="hero-count-lbl" id="heroDaysLbl">tap to switch</div>
+            </div>
+        </div>
+        <div class="bar-track" id="heroTrack" style="display:none;">
+            <div class="bar-fill" id="heroBar" style="width:0%;"></div>
+        </div>
+    </div>
+
+    <div class="search-wrap">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search deadlines & notes..." oninput="handleSearch()">
+        <button id="searchClear" class="search-clear" onclick="clearSearch()">✕</button>
+    </div>
+
+    <div class="cat-filter-bar" id="catFilterBar"></div>
+
+    <div class="view-tabs">
+        <button class="view-btn active" id="tabActive" onclick="switchView('active')">Countdown</button>
+        <button class="view-btn" id="tabSince" onclick="switchView('since')">Elapsed</button>
+        <button class="view-btn" id="tabHistory" onclick="switchView('history')">History</button>
+    </div>
+
+    <div id="mainContent" style="padding-bottom:80px;"></div>
+
+    <button class="fab" onclick="openEditor()">+ Add</button>
+
+    <div id="editorModal" class="modal-overlay" onclick="closeModalOnBg(event, 'editorModal')">
+        <div class="modal-sheet">
+            <div class="modal-header">
+                <div class="modal-title" id="editorTitle">New Tracker</div>
+                <button class="close-modal" onclick="closeModal('editorModal')">✕</button>
+            </div>
+
+            <div class="type-switch">
+                <button type="button" id="btnModeCountdown" class="type-btn active" onclick="setItemMode('countdown')">⏳ Countdown (Due)</button>
+                <button type="button" id="btnModeSince" class="type-btn" onclick="setItemMode('since')">↻ Elapsed (Since)</button>
+            </div>
+
+            <input type="text" id="itemTitleInput" placeholder="Title (e.g. Car Inspection, Insurance, Oil Change)">
+
+            <div class="cat-select-row">
+                <select id="itemCategorySelect"></select>
+                <button type="button" class="quick-add-cat-btn" title="New category" onclick="quickAddCategory()">+</button>
+            </div>
+
+            <div class="field-label">Card Color Tag</div>
+            <div class="color-picker-row" id="colorPickerRow"></div>
+
+            <div class="field-label" id="dateFieldLabel">Target Due Date</div>
+            <input type="date" id="itemDateInput">
+
+            <div id="repeatWrap">
+                <div class="field-label">Repeat Cycle</div>
+                <select id="itemRepeatSelect">
+                    <option value="none">One-time (No repeat)</option>
+                    <option value="1m">Every 1 Month</option>
+                    <option value="3m">Every 3 Months</option>
+                    <option value="6m">Every 6 Months</option>
+                    <option value="1y">Every 1 Year</option>
+                    <option value="2y">Every 2 Years</option>
+                </select>
+            </div>
+
+            <textarea id="itemNoteInput" rows="2" placeholder="Optional note (e.g. phone number, documents needed)..." style="resize:none;"></textarea>
+
+            <button class="btn-primary" onclick="saveItem()">Save</button>
+            <button id="deleteItemBtn" class="btn-danger" style="display:none;" onclick="deleteCurrentItem()">Delete Item</button>
+        </div>
+    </div>
+
+    <div id="dataModal" class="modal-overlay" onclick="closeModalOnBg(event, 'dataModal')">
+        <div class="modal-sheet">
+            <div class="modal-header">
+                <div class="modal-title">Categories & Backup</div>
+                <button class="close-modal" onclick="closeModal('dataModal')">✕</button>
+            </div>
+
+            <div class="cat-mgr-title"><span>Manage Categories</span></div>
+            <div class="cat-add-row">
+                <input type="text" id="newCatInput" placeholder="New category (e.g. Health, Home)" onkeydown="if(event.key==='Enter') addCategoryFromMgr()">
+                <button type="button" onclick="addCategoryFromMgr()">Add</button>
+            </div>
+            <div class="cat-chip-list" id="catMgrList"></div>
+
+            <div class="cat-mgr-section">
+                <div class="cat-mgr-title">Backup & Restore</div>
+                <p style="font-size:12px; color:var(--text-muted); margin-top:0; line-height:1.4;">
+                    Export your countdowns, elapsed timers, categories, and history.
+                </p>
+                <button class="btn-secondary" onclick="exportData()">⬇ Export Backup (.json)</button>
+                <button class="btn-secondary" onclick="document.getElementById('importFile').click()">⬆ Import Backup (.json)</button>
+                <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                <div id="persistStatus" style="font-size:11px; color:var(--text-muted); text-align:center; margin-top:4px;"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const ITEMS_KEY = 'gaben_aixon_items_v1';
+        const CATS_KEY = 'gaben_aixon_cats_v1';
+        const HISTORY_KEY = 'gaben_aixon_history_v1';
+
+        const DEFAULT_CATS = ['Car & Docs', 'Finance', 'Home', 'Health', 'Travel', 'Personal'];
+        const COLOR_SWATCHES = ['#FADB15', '#38BDF8', '#34D399', '#A78BFA', '#F472B6', '#FB923C', '#9CA3AF'];
+
+        let items = [];
+        let cats = [...DEFAULT_CATS];
+        let historyLog = [];
+        let currentView = 'active';
+        let activeCatFilter = 'All';
+        let searchQuery = '';
+        let expandedTimeFormat = false;
+        let editingId = null;
+        let currentMode = 'countdown';
+        let selectedColor = COLOR_SWATCHES[0];
+
+        async function enablePersistentStorage() {
+            const statusEl = document.getElementById('persistStatus');
+            if (navigator.storage && navigator.storage.persist) {
+                try {
+                    const isPersisted = await navigator.storage.persisted();
+                    if (!isPersisted) {
+                        const granted = await navigator.storage.persist();
+                        if (statusEl) statusEl.innerText = granted ? 'iOS Storage Protection: Active ✓' : 'Tip: Add to Home Screen for full storage protection.';
+                    } else if (statusEl) {
+                        statusEl.innerText = 'iOS Storage Protection: Active ✓';
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function init() {
+            try {
+                const sItems = localStorage.getItem(ITEMS_KEY);
+                if (sItems) items = JSON.parse(sItems) || [];
+            } catch (e) { items = []; }
+
+            try {
+                const sCats = localStorage.getItem(CATS_KEY);
+                if (sCats) {
+                    const parsed = JSON.parse(sCats);
+                    if (Array.isArray(parsed) && parsed.length > 0) cats = parsed;
+                }
+            } catch (e) {}
+
+            try {
+                const sHist = localStorage.getItem(HISTORY_KEY);
+                if (sHist) historyLog = JSON.parse(sHist) || [];
+            } catch (e) { historyLog = []; }
+
+            items.forEach(it => {
+                if (it.category && !cats.includes(it.category)) cats.push(it.category);
+            });
+
+            enablePersistentStorage();
+            render();
+        }
+
+        function saveAll() {
+            localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
+            localStorage.setItem(CATS_KEY, JSON.stringify(cats));
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(historyLog));
+            render();
+        }
+
+        function getTodayMidnight() {
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        }
+
+        function parseLocalDate(dateStr) {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function formatDisplayDate(dateStr) {
+            const d = parseLocalDate(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function diffDaysFromToday(dateStr) {
+            const target = parseLocalDate(dateStr);
+            const today = getTodayMidnight();
+            return Math.round((target - today) / 86400000);
+        }
+
+        function formatFlexibleDuration(absDays) {
+            if (!expandedTimeFormat) {
+                return `${absDays} ${absDays === 1 ? 'day' : 'days'}`;
+            }
+            if (absDays < 30) {
+                const weeks = Math.floor(absDays / 7);
+                const remDays = absDays % 7;
+                if (weeks === 0) return `${absDays}d`;
+                return remDays > 0 ? `${weeks}w ${remDays}d` : `${weeks}w`;
+            }
+            const months = Math.floor(absDays / 30.4375);
+            const remDays = Math.round(absDays - months * 30.4375);
+            if (months >= 12) {
+                const years = Math.floor(months / 12);
+                const remMonths = months % 12;
+                return remMonths > 0 ? `${years}y ${remMonths}m` : `${years}y`;
+            }
+            return remDays > 0 ? `${months}m ${remDays}d` : `${months}m`;
+        }
+
+        function toggleTimeFormat() {
+            expandedTimeFormat = !expandedTimeFormat;
+            render();
+        }
+
+        function switchView(v) {
+            currentView = v;
+            document.getElementById('tabActive').classList.toggle('active', v === 'active');
+            document.getElementById('tabSince').classList.toggle('active', v === 'since');
+            document.getElementById('tabHistory').classList.toggle('active', v === 'history');
+            render();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
+            render();
+        }
+
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            document.getElementById('searchClear').style.display = 'none';
+            render();
+        }
+
+        function setCatFilter(c) {
+            activeCatFilter = c;
+            render();
+        }
+
+        function addCycleToDate(dateStr, repeatCode) {
+            const d = parseLocalDate(dateStr);
+            if (repeatCode === '1m') d.setMonth(d.getMonth() + 1);
+            else if (repeatCode === '3m') d.setMonth(d.getMonth() + 3);
+            else if (repeatCode === '6m') d.setMonth(d.getMonth() + 6);
+            else if (repeatCode === '1y') d.setFullYear(d.getFullYear() + 1);
+            else if (repeatCode === '2y') d.setFullYear(d.getFullYear() + 2);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+        function getUrgencyInfo(daysLeft) {
+            if (daysLeft < 0) return { color: 'var(--urgent)', label: `${formatFlexibleDuration(Math.abs(daysLeft))} overdue` };
+            if (daysLeft === 0) return { color: 'var(--urgent)', label: 'Due Today!' };
+            if (daysLeft <= 7) return { color: 'var(--urgent)', label: `${formatFlexibleDuration(daysLeft)} left` };
+            if (daysLeft <= 30) return { color: 'var(--warn)', label: `${formatFlexibleDuration(daysLeft)} left` };
+            return { color: 'var(--ok)', label: `${formatFlexibleDuration(daysLeft)} left` };
+        }
+
+        function getProgressPct(startStr, targetStr) {
+            if (!startStr || !targetStr) return 0;
+            const start = parseLocalDate(startStr);
+            const target = parseLocalDate(targetStr);
+            const today = getTodayMidnight();
+            const total = target - start;
+            if (total <= 0) return 100;
+            const elapsed = today - start;
+            return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+        }
+
+        function completeOrCycleItem(event, id) {
+            event.stopPropagation();
+            const idx = items.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const it = items[idx];
+            const todayStr = new Date().toISOString().slice(0, 10);
+
+            if (it.mode === 'since') {
+                historyLog.unshift({
+                    id: 'h_' + Date.now(),
+                    title: it.title,
+                    category: it.category,
+                    color: it.color,
+                    completedDate: todayStr,
+                    note: `Reset after ${Math.max(0, -diffDaysFromToday(it.targetDate))} days`
+                });
+                it.targetDate = todayStr;
+                saveAll();
+                return;
+            }
+
+            historyLog.unshift({
+                id: 'h_' + Date.now(),
+                title: it.title,
+                category: it.category,
+                color: it.color,
+                completedDate: todayStr,
+                note: it.repeat && it.repeat !== 'none' ? `Completed (Cycle: ${it.repeat})` : 'Completed'
+            });
+
+            if (it.repeat && it.repeat !== 'none') {
+                it.startDate = todayStr;
+                it.targetDate = addCycleToDate(it.targetDate, it.repeat);
+            } else {
+                items.splice(idx, 1);
+            }
+            saveAll();
+        }
+
+        function render() {
+            const filterBar = document.getElementById('catFilterBar');
+            const filterCats = ['All', ...cats];
+            filterBar.innerHTML = filterCats.map(c => `
+                <button class="filter-pill ${activeCatFilter === c ? 'active' : ''}" onclick="setCatFilter('${escapeJs(c)}')">${escapeHtml(c)}</button>
+            `).join('');
+
+            const countdowns = items
+                .filter(it => it.mode === 'countdown')
+                .sort((a, b) => diffDaysFromToday(a.targetDate) - diffDaysFromToday(b.targetDate));
+
+            const heroTitle = document.getElementById('heroTitle');
+            const heroSub = document.getElementById('heroSub');
+            const heroCat = document.getElementById('heroCatLabel');
+            const heroNum = document.getElementById('heroDaysNum');
+            const heroLbl = document.getElementById('heroDaysLbl');
+            const heroTrack = document.getElementById('heroTrack');
+            const heroBar = document.getElementById('heroBar');
+
+            if (countdowns.length > 0) {
+                const next = countdowns[0];
+                const dLeft = diffDaysFromToday(next.targetDate);
+                const urg = getUrgencyInfo(dLeft);
+                const pct = getProgressPct(next.startDate, next.targetDate);
+                heroTitle.innerText = next.title;
+                heroSub.innerText = `Due: ${formatDisplayDate(next.targetDate)}`;
+                heroCat.innerText = next.category || 'General';
+                heroNum.innerText = dLeft < 0 ? `-${formatFlexibleDuration(Math.abs(dLeft))}` : (dLeft === 0 ? 'TODAY' : formatFlexibleDuration(dLeft));
+                heroNum.style.color = urg.color;
+                heroLbl.innerText = dLeft < 0 ? 'overdue (tap format)' : (dLeft === 0 ? 'due today' : 'remaining (tap format)');
+                heroTrack.style.display = 'block';
+                heroBar.style.width = `${pct}%`;
+                heroBar.style.backgroundColor = urg.color;
+            } else {
+                heroTitle.innerText = 'No active deadlines';
+                heroSub.innerText = 'Tap + Add to create your first countdown';
+                heroCat.innerText = 'Ready';
+                heroNum.innerText = '—';
+                heroNum.style.color = 'var(--accent)';
+                heroLbl.innerText = 'tap to switch';
+                heroTrack.style.display = 'none';
+            }
+
+            const main = document.getElementById('mainContent');
+
+            if (currentView === 'history') {
+                if (historyLog.length === 0) {
+                    main.innerHTML = `<div class="empty-state">No completed items yet.<br>Tap <b>✓ Done</b> on any countdown to log it here.</div>`;
+                    return;
+                }
+                main.innerHTML = historyLog.map(h => `
+                    <div class="item-card" style="border-left-color:${h.color || '#FADB15'};">
+                        <div class="item-top" style="cursor:default;">
+                            <div class="item-left">
+                                <div class="item-title">
+                                    <span>${escapeHtml(h.title)}</span>
+                                    <span class="item-cat-tag">${escapeHtml(h.category || '')}</span>
+                                </div>
+                                <div class="item-meta">Logged on ${formatDisplayDate(h.completedDate)} • ${escapeHtml(h.note || '')}</div>
+                            </div>
+                            <div class="item-right">
+                                <span style="color:var(--ok); font-weight:800; font-size:13px;">✓ Done</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                return;
+            }
+
+            const targetMode = currentView === 'since' ? 'since' : 'countdown';
+            let filtered = items.filter(it => {
+                if (it.mode !== targetMode) return false;
+                if (activeCatFilter !== 'All' && it.category !== activeCatFilter) return false;
+                if (searchQuery) {
+                    const hay = `${it.title} ${it.category} ${it.note || ''}`.toLowerCase();
+                    return hay.includes(searchQuery);
+                }
+                return true;
+            });
+
+            if (targetMode === 'countdown') {
+                filtered.sort((a, b) => diffDaysFromToday(a.targetDate) - diffDaysFromToday(b.targetDate));
+            } else {
+                filtered.sort((a, b) => diffDaysFromToday(a.targetDate) - diffDaysFromToday(b.targetDate));
+            }
+
+            if (filtered.length === 0) {
+                main.innerHTML = targetMode === 'countdown'
+                    ? `<div class="empty-state">No countdowns found.<br>Tap <b>+ Add</b> to track a deadline.</div>`
+                    : `<div class="empty-state">No elapsed timers yet.<br>Tap <b>+ Add</b> and choose <b>Elapsed (Since)</b>.</div>`;
+                return;
+            }
+
+            main.innerHTML = filtered.map(it => {
+                const diff = diffDaysFromToday(it.targetDate);
+                if (targetMode === 'countdown') {
+                    const urg = getUrgencyInfo(diff);
+                    const pct = getProgressPct(it.startDate, it.targetDate);
+                    const doneBtnText = (it.repeat && it.repeat !== 'none') ? '✓ Done (Next)' : '✓ Done';
+                    return `
+                    <div class="item-card" style="border-left-color:${it.color || '#FADB15'};">
+                        <div class="item-top" onclick="openEditor('${it.id}')">
+                            <div class="item-left">
+                                <div class="item-title">
+                                    <span>${escapeHtml(it.title)}</span>
+                                    <span class="item-cat-tag">${escapeHtml(it.category)}</span>
+                                </div>
+                                <div class="item-meta">Due: ${formatDisplayDate(it.targetDate)}${it.repeat && it.repeat !== 'none' ? ` • ↻ ${it.repeat}` : ''}</div>
+                                ${it.note ? `<div class="item-note">${escapeHtml(it.note)}</div>` : ''}
+                            </div>
+                            <div class="item-right" onclick="event.stopPropagation(); toggleTimeFormat();">
+                                <div class="item-days" style="color:${urg.color};">${diff < 0 ? `-${formatFlexibleDuration(Math.abs(diff))}` : (diff === 0 ? 'Today' : formatFlexibleDuration(diff))}</div>
+                                <div class="item-days-sub">${diff < 0 ? 'overdue' : (diff === 0 ? 'due now' : 'remaining')}</div>
+                            </div>
+                        </div>
+                        <div class="item-bottom">
+                            <div class="mini-track"><div class="mini-fill" style="width:${pct}%; background-color:${urg.color};"></div></div>
+                            <button type="button" class="quick-done-btn" onclick="completeOrCycleItem(event, '${it.id}')">${doneBtnText}</button>
+                        </div>
+                    </div>`;
+                } else {
+                    const elapsedDays = Math.max(0, -diff);
+                    return `
+                    <div class="item-card" style="border-left-color:${it.color || '#FADB15'};">
+                        <div class="item-top" onclick="openEditor('${it.id}')">
+                            <div class="item-left">
+                                <div class="item-title">
+                                    <span>${escapeHtml(it.title)}</span>
+                                    <span class="item-cat-tag">${escapeHtml(it.category)}</span>
+                                </div>
+                                <div class="item-meta">Due: ${formatDisplayDate(it.targetDate)}${it.repeat && it.repeat !== 'none' ? ` • ↻ ${it.repeat}` : ''}</div>
+                                ${it.note ? `<div class="item-note">${escapeHtml(it.note)}</div>` : ''}
+                            </div>
+                            <div class="item-right" onclick="event.stopPropagation(); toggleTimeFormat();">
+                                <div class="item-days" style="color:${urg.color};">${diff < 0 ? `-${formatFlexibleDuration(Math.abs(diff))}` : (diff === 0 ? 'Today' : formatFlexibleDuration(diff))}</div>
+                                <div class="item-days-sub">${diff < 0 ? 'overdue' : (diff === 0 ? 'due now' : 'remaining')}</div>
+                            </div>
+                        </div>
+                        <div class="item-bottom">
+                            <div class="mini-track"><div class="mini-fill" style="width:${pct}%; background-color:${urg.color};"></div></div>
+                            <button type="button" class="quick-done-btn" onclick="completeOrCycleItem(event, '${it.id}')">${doneBtnText}</button>
+                        </div>
+                    </div>`;
+                } else {
+                    const elapsedDays = Math.max(0, -diff);
+                    return `
+                    <div class="item-card" style="border-left-color:${it.color || '#FADB15'};">
+                        <div class="item-top" onclick="openEditor('${it.id}')">
+                            <div class="item-left">
+                                <div class="item-title">
+                                    <span>${escapeHtml(it.title)}</span>
+                                    <span class="item-cat-tag">${escapeHtml(it.category)}</span>
+                                </div>
+                                <div class="item-meta">Last done: ${formatDisplayDate(it.targetDate)}</div>
+                                ${it.note ? `<div class="item-note">${escapeHtml(it.note)}</div>` : ''}
+                            </div>
+                            <div class="item-right" onclick="event.stopPropagation(); toggleTimeFormat();">
+                                <div class="item-days" style="color:var(--accent);">${formatFlexibleDuration(elapsedDays)}</div>
+                                <div class="item-days-sub">ago</div>
+                            </div>
+                        </div>
+                        <div class="item-bottom">
+                            <span style="font-size:11px; color:var(--text-muted);">Tap card to edit date</span>
+                            <button type="button" class="quick-done-btn" onclick="completeOrCycleItem(event, '${it.id}')">↻ Reset Today</button>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+        }
+        function populateEditorCategories(selectedCat = null) {
+            const sel = document.getElementById('itemCategorySelect');
+            sel.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+            if (selectedCat && cats.includes(selectedCat)) sel.value = selectedCat;
+        }
+
+        function renderColorSwatches() {
+            const row = document.getElementById('colorPickerRow');
+            row.innerHTML = COLOR_SWATCHES.map(hex => `
+                <div class="color-swatch ${selectedColor === hex ? 'selected' : ''}" style="background-color:${hex};" onclick="selectCardColor('${hex}')"></div>
+            `).join('');
+        }
+
+        function selectCardColor(hex) {
+            selectedColor = hex;
+            renderColorSwatches();
+        }
+
+        function setItemMode(mode) {
+            currentMode = mode;
+            document.getElementById('btnModeCountdown').classList.toggle('active', mode === 'countdown');
+            document.getElementById('btnModeSince').classList.toggle('active', mode === 'since');
+            document.getElementById('dateFieldLabel').innerText = mode === 'countdown' ? 'Target Due Date' : 'Last Done Date';
+            document.getElementById('repeatWrap').style.display = mode === 'countdown' ? 'block' : 'none';
+        }
+
+        function quickAddCategory() {
+            const raw = prompt('New category name:');
+            if (!raw) return;
+            const name = raw.trim();
+            if (!name) return;
+            const existing = cats.find(c => c.toLowerCase() === name.toLowerCase());
+            if (existing) {
+                populateEditorCategories(existing);
+                return;
+            }
+            cats.push(name);
+            saveAll();
+            populateEditorCategories(name);
+        }
+
+        function openEditor(id = null) {
+            editingId = id;
+            const modal = document.getElementById('editorModal');
+            const delBtn = document.getElementById('deleteItemBtn');
+
+            if (id) {
+                const it = items.find(x => x.id === id);
+                document.getElementById('editorTitle').innerText = 'Edit Tracker';
+                setItemMode(it.mode || 'countdown');
+                populateEditorCategories(it.category);
+                selectedColor = it.color || COLOR_SWATCHES;
+                renderColorSwatches();
+                document.getElementById('itemTitleInput').value = it.title;
+                document.getElementById('itemDateInput').value = it.targetDate;
+                document.getElementById('itemRepeatSelect').value = it.repeat || 'none';
+                document.getElementById('itemNoteInput').value = it.note || '';
+                delBtn.style.display = 'block';
+            } else {
+                document.getElementById('editorTitle').innerText = 'New Tracker';
+                setItemMode(currentView === 'since' ? 'since' : 'countdown');
+                populateEditorCategories();
+                selectedColor = COLOR_SWATCHES;
+                renderColorSwatches();
+                document.getElementById('itemTitleInput').value = '';
+                document.getElementById('itemDateInput').value = new Date().toISOString().slice(0, 10);
+                document.getElementById('itemRepeatSelect').value = 'none';
+                document.getElementById('itemNoteInput').value = '';
+                delBtn.style.display = 'none';
+            }
+            modal.classList.add('open');
+        }
+
+        function saveItem() {
+            const title = document.getElementById('itemTitleInput').value.trim();
+            if (!title) {
+                alert('Please enter a title.');
+                return;
+            }
+            const category = document.getElementById('itemCategorySelect').value;
+            const targetDate = document.getElementById('itemDateInput').value;
+            if (!targetDate) {
+                alert('Please select a date.');
+                return;
+            }
+            const repeat = currentMode === 'countdown' ? document.getElementById('itemRepeatSelect').value : 'none';
+            const note = document.getElementById('itemNoteInput').value.trim();
+            const todayStr = new Date().toISOString().slice(0, 10);
+
+            if (editingId) {
+                const it = items.find(x => x.id === editingId);
+                if (it) {
+                    it.mode = currentMode;
+                    it.title = title;
+                    it.category = category;
+                    it.color = selectedColor;
+                    it.targetDate = targetDate;
+                    it.repeat = repeat;
+                    it.note = note;
+                }
+            } else {
+                items.unshift({
+                    id: 'ax_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    mode: currentMode,
+                    title,
+                    category,
+                    color: selectedColor,
+                    startDate: todayStr,
+                    targetDate,
+                    repeat,
+                    note
+                });
+            }
+
+            closeModal('editorModal');
+            saveAll();
+        }
+
+        function deleteCurrentItem() {
+            if (!editingId) return;
+            items = items.filter(x => x.id !== editingId);
+            closeModal('editorModal');
+            saveAll();
+        }
+        function openDataModal() {
+            renderCatManager();
+            document.getElementById('dataModal').classList.add('open');
+        }
+
+        function renderCatManager() {
+            const container = document.getElementById('catMgrList');
+            container.innerHTML = cats.map((cat, idx) => `
+                <div class="cat-chip-item">
+                    <span>${escapeHtml(cat)}</span>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="cat-icon-btn" onclick="renameCategory(${idx})">Edit</button>
+                        ${cats.length > 1 ? `<button type="button" class="cat-icon-btn" style="color:var(--urgent);" onclick="deleteCategory(${idx})">✕</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addCategoryFromMgr() {
+            const input = document.getElementById('newCatInput');
+            const name = input.value.trim();
+            if (!name) return;
+            if (cats.some(c => c.toLowerCase() === name.toLowerCase())) {
+                alert('This category already exists.');
+                return;
+            }
+            cats.push(name);
+            input.value = '';
+            saveAll();
+            renderCatManager();
+        }
+
+        function renameCategory(idx) {
+            const oldName = cats[idx];
+            const raw = prompt('Rename category:', oldName);
+            if (!raw) return;
+            const newName = raw.trim();
+            if (!newName || newName === oldName) return;
+            if (cats.some((c, i) => i !== idx && c.toLowerCase() === newName.toLowerCase())) {
+                alert('A category with this name already exists.');
+                return;
+            }
+            cats[idx] = newName;
+            items.forEach(it => { if (it.category === oldName) it.category = newName; });
+            historyLog.forEach(h => { if (h.category === oldName) h.category = newName; });
+            if (activeCatFilter === oldName) activeCatFilter = newName;
+            saveAll();
+            renderCatManager();
+        }
+
+        function deleteCategory(idx) {
+            if (cats.length <= 1) return;
+            const target = cats[idx];
+            if (!confirm(`Delete "${target}"?`)) return;
+            cats.splice(idx, 1);
+            if (activeCatFilter === target) activeCatFilter = 'All';
+            saveAll();
+            renderCatManager();
+        }
+
+        function exportData() {
+            const payload = {
+                items: items,
+                cats: cats,
+                historyLog: historyLog
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gaben-aixon-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data && Array.isArray(data.items)) {
+                        items = data.items;
+                        if (Array.isArray(data.cats) && data.cats.length > 0) cats = data.cats;
+                        if (Array.isArray(data.historyLog)) historyLog = data.historyLog;
+                        saveAll();
+                        renderCatManager();
+                        closeModal('dataModal');
+                        alert('Backup restored!');
+                    } else {
+                        alert('Invalid backup file.');
+                    }
+                } catch (err) {
+                    alert('Error reading file.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        function closeModalOnBg(e, id) { if (e.target.id === id) closeModal(id); }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        function escapeJs(str) {
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
