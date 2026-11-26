@@ -1022,35 +1022,12 @@
                 return;
             }
 
-            main.innerHTML = filtered.map(it => {
+                       main.innerHTML = filtered.map(it => {
                 const diff = diffDaysFromToday(it.targetDate);
                 if (targetMode === 'countdown') {
                     const urg = getUrgencyInfo(diff);
                     const pct = getProgressPct(it.startDate, it.targetDate);
                     const doneBtnText = (it.repeat && it.repeat !== 'none') ? '✓ Done (Next)' : '✓ Done';
-                    return `
-                    <div class="item-card" style="border-left-color:${it.color || '#FADB15'};">
-                        <div class="item-top" onclick="openEditor('${it.id}')">
-                            <div class="item-left">
-                                <div class="item-title">
-                                    <span>${escapeHtml(it.title)}</span>
-                                    <span class="item-cat-tag">${escapeHtml(it.category)}</span>
-                                </div>
-                                <div class="item-meta">Due: ${formatDisplayDate(it.targetDate)}${it.repeat && it.repeat !== 'none' ? ` • ↻ ${it.repeat}` : ''}</div>
-                                ${it.note ? `<div class="item-note">${escapeHtml(it.note)}</div>` : ''}
-                            </div>
-                            <div class="item-right" onclick="event.stopPropagation(); toggleTimeFormat();">
-                                <div class="item-days" style="color:${urg.color};">${diff < 0 ? `-${formatFlexibleDuration(Math.abs(diff))}` : (diff === 0 ? 'Today' : formatFlexibleDuration(diff))}</div>
-                                <div class="item-days-sub">${diff < 0 ? 'overdue' : (diff === 0 ? 'due now' : 'remaining')}</div>
-                            </div>
-                        </div>
-                        <div class="item-bottom">
-                            <div class="mini-track"><div class="mini-fill" style="width:${pct}%; background-color:${urg.color};"></div></div>
-                            <button type="button" class="quick-done-btn" onclick="completeOrCycleItem(event, '${it.id}')">${doneBtnText}</button>
-                        </div>
-                    </div>`;
-                } else {
-                    const elapsedDays = Math.max(0, -diff);
                     return `
                     <div class="item-card" style="border-left-color:${it.color || '#FADB15'};">
                         <div class="item-top" onclick="openEditor('${it.id}')">
@@ -1098,6 +1075,7 @@
                 }
             }).join('');
         }
+
         function populateEditorCategories(selectedCat = null) {
             const sel = document.getElementById('itemCategorySelect');
             sel.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
