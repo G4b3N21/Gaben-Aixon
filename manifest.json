@@ -1,15 +1,13 @@
 {
   "name": "Gaben Aixon",
-  "short_name": "Gaben Aixon",
+  "short_name": "Aixon",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#0E0E10",
   "theme_color": "#0E0E10",
   "icons": [
-    {
-      "src": "ikon.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg"
-    }
+    { "src": "ikon.jpg", "sizes": "192x192", "type": "image/jpeg" },
+    { "src": "ikon.jpg", "sizes": "512x512", "type": "image/jpeg" }
   ]
 }
