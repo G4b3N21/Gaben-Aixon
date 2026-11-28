@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <!-- iPhone PWA & Icon settings -->
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gaben Aixon">
@@ -12,7 +11,7 @@
     <link rel="apple-touch-icon" href="ikon.jpg">
     <link rel="icon" type="image/jpeg" href="ikon.jpg">
     <link rel="manifest" href="manifest.json">
-    
+
     <title>Gaben Aixon</title>
     <style>
         :root {
@@ -69,6 +68,17 @@
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
+        }
+
+        .banner {
+            display: none;
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
         }
 
         .hero-card {
@@ -142,6 +152,7 @@
             border-radius: 6px;
             transition: width 0.25s ease;
         }
+
         .search-wrap {
             position: relative;
             margin-bottom: 10px;
@@ -346,6 +357,36 @@
             z-index: 50;
         }
 
+        #toast {
+            display: none;
+            position: fixed;
+            left: 16px;
+            right: 16px;
+            bottom: calc(env(safe-area-inset-bottom, 16px) + 84px);
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 60;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        #toast.show { display: flex; }
+
+        #toast button {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -519,19 +560,6 @@
             cursor: pointer;
         }
 
-        .btn-secondary {
-            width: 100%;
-            background-color: var(--bg-input);
-            color: var(--text-main);
-            border: 1px solid var(--border);
-            padding: 13px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-
         .cat-mgr-section {
             margin-top: 14px;
             padding-top: 14px;
@@ -612,6 +640,8 @@
         <button class="data-btn" onclick="openDataModal()">Data & Categories</button>
     </header>
 
+    <div class="banner" id="backupBanner"></div>
+
     <div class="hero-card" id="heroCard">
         <div class="hero-top">
             <span>⏳ Next Deadline</span>
@@ -648,6 +678,8 @@
     <div id="mainContent" style="padding-bottom:80px;"></div>
 
     <button class="fab" onclick="openEditor()">+ Add</button>
+
+    <div id="toast"><span id="toastMsg"></span><button type="button" id="toastUndo">Undo</button></div>
 
     <div id="editorModal" class="modal-overlay" onclick="closeModalOnBg(event, 'editorModal')">
         <div class="modal-sheet">
@@ -710,7 +742,7 @@
             <div class="cat-mgr-section">
                 <div class="cat-mgr-title">Backup & Restore</div>
                 <p style="font-size:12px; color:var(--text-muted); margin-top:0; line-height:1.4;">
-                    Export your countdowns, elapsed timers, categories, and history.
+                    Export your countdowns, elapsed timers, categories, and history. On iPhone the share sheet lets you send the file straight to the cloud.
                 </p>
                 <button class="btn-secondary" onclick="exportData()">⬇ Export Backup (.json)</button>
                 <button class="btn-secondary" onclick="document.getElementById('importFile').click()">⬆ Import Backup (.json)</button>
@@ -719,13 +751,19 @@
             </div>
         </div>
     </div>
+
     <script>
         const ITEMS_KEY = 'gaben_aixon_items_v1';
         const CATS_KEY = 'gaben_aixon_cats_v1';
         const HISTORY_KEY = 'gaben_aixon_history_v1';
+        const CHANGES_KEY = 'gaben_aixon_changes_since_export';
 
         const DEFAULT_CATS = ['Car & Docs', 'Finance', 'Home', 'Health', 'Travel', 'Personal'];
         const COLOR_SWATCHES = ['#FADB15', '#38BDF8', '#34D399', '#A78BFA', '#F472B6', '#FB923C', '#9CA3AF'];
+        const REPEAT_MONTHS = { '1m': 1, '3m': 3, '6m': 6, '1y': 12, '2y': 24 };
+        const REPEAT_LABELS = { '1m': 'Monthly', '3m': 'Every 3 months', '6m': 'Every 6 months', '1y': 'Yearly', '2y': 'Every 2 years' };
+        const BAR_WINDOW_DAYS = 14;
+        const BACKUP_REMINDER_AT = 5;
 
         let items = [];
         let cats = [...DEFAULT_CATS];
@@ -737,6 +775,8 @@
         let editingId = null;
         let currentMode = 'countdown';
         let selectedColor = COLOR_SWATCHES[0];
+        let undoSnapshot = null;
+        let toastTimer = null;
 
         async function enablePersistentStorage() {
             const statusEl = document.getElementById('persistStatus');
@@ -785,6 +825,35 @@
             localStorage.setItem(CATS_KEY, JSON.stringify(cats));
             localStorage.setItem(HISTORY_KEY, JSON.stringify(historyLog));
             render();
+        }
+
+        /* ---------- backup reminder ---------- */
+        function bumpChanges() {
+            const n = (+localStorage.getItem(CHANGES_KEY) || 0) + 1;
+            localStorage.setItem(CHANGES_KEY, n);
+        }
+
+        function updateBanner() {
+            const n = +localStorage.getItem(CHANGES_KEY) || 0;
+            const b = document.getElementById('backupBanner');
+            if (n >= BACKUP_REMINDER_AT) {
+                b.style.display = 'block';
+                b.textContent = n + ' changes since your last backup. Time to export!';
+            } else {
+                b.style.display = 'none';
+            }
+        }
+
+        /* ---------- dates (local time) ---------- */
+        function toLocalISO(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function todayISO() {
+            return toLocalISO(new Date());
         }
 
         function getTodayMidnight() {
@@ -841,8 +910,13 @@
             render();
         }
 
+        /* ---------- search (case and accent insensitive) ---------- */
+        function norm(s) {
+            return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        }
+
         function handleSearch() {
-            searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            searchQuery = norm(document.getElementById('searchInput').value.trim());
             document.getElementById('searchClear').style.display = searchQuery ? 'block' : 'none';
             render();
         }
@@ -859,18 +933,18 @@
             render();
         }
 
-        function addCycleToDate(dateStr, repeatCode) {
+        /* ---------- repeat cycle (month-end safe) ---------- */
+        function addCycleToDate(dateStr, repeatCode, anchorDay) {
+            const months = REPEAT_MONTHS[repeatCode];
+            if (!months) return dateStr;
             const d = parseLocalDate(dateStr);
-            if (repeatCode === '1m') d.setMonth(d.getMonth() + 1);
-            else if (repeatCode === '3m') d.setMonth(d.getMonth() + 3);
-            else if (repeatCode === '6m') d.setMonth(d.getMonth() + 6);
-            else if (repeatCode === '1y') d.setFullYear(d.getFullYear() + 1);
-            else if (repeatCode === '2y') d.setFullYear(d.getFullYear() + 2);
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${y}-${m}-${day}`;
+            const day = anchorDay || d.getDate();
+            const t = new Date(d.getFullYear(), d.getMonth() + months, 1);
+            const last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+            t.setDate(Math.min(day, last));
+            return toLocalISO(t);
         }
+
         function getUrgencyInfo(daysLeft) {
             if (daysLeft < 0) return { color: 'var(--urgent)', label: `${formatFlexibleDuration(Math.abs(daysLeft))} overdue` };
             if (daysLeft === 0) return { color: 'var(--urgent)', label: 'Due Today!' };
@@ -879,23 +953,46 @@
             return { color: 'var(--ok)', label: `${formatFlexibleDuration(daysLeft)} left` };
         }
 
-        function getProgressPct(startStr, targetStr) {
-            if (!startStr || !targetStr) return 0;
-            const start = parseLocalDate(startStr);
-            const target = parseLocalDate(targetStr);
-            const today = getTodayMidnight();
-            const total = target - start;
-            if (total <= 0) return 100;
-            const elapsed = today - start;
-            return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+        // The bar grows as the deadline gets closer. Empty beyond the window, full when due or overdue.
+        function getProgressPct(targetStr) {
+            if (!targetStr) return 0;
+            const left = diffDaysFromToday(targetStr);
+            if (left <= 0) return 100;
+            return Math.min(100, Math.max(0, Math.round((1 - left / BAR_WINDOW_DAYS) * 100)));
         }
+
+        /* ---------- toast + undo ---------- */
+        function showToast(msg) {
+            document.getElementById('toastMsg').textContent = msg;
+            document.getElementById('toast').classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(hideToast, 6000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.remove('show');
+            undoSnapshot = null;
+        }
+
+        document.getElementById('toastUndo').onclick = function () {
+            if (!undoSnapshot) return;
+            try {
+                const snap = JSON.parse(undoSnapshot);
+                items = snap.items;
+                historyLog = snap.historyLog;
+                saveAll();
+            } catch (e) {}
+            hideToast();
+        };
 
         function completeOrCycleItem(event, id) {
             event.stopPropagation();
             const idx = items.findIndex(x => x.id === id);
             if (idx === -1) return;
             const it = items[idx];
-            const todayStr = new Date().toISOString().slice(0, 10);
+            const today = todayISO();
+
+            undoSnapshot = JSON.stringify({ items, historyLog });
 
             if (it.mode === 'since') {
                 historyLog.unshift({
@@ -903,11 +1000,13 @@
                     title: it.title,
                     category: it.category,
                     color: it.color,
-                    completedDate: todayStr,
+                    completedDate: today,
                     note: `Reset after ${Math.max(0, -diffDaysFromToday(it.targetDate))} days`
                 });
-                it.targetDate = todayStr;
+                it.targetDate = today;
+                bumpChanges();
                 saveAll();
+                showToast('Timer reset');
                 return;
             }
 
@@ -916,20 +1015,27 @@
                 title: it.title,
                 category: it.category,
                 color: it.color,
-                completedDate: todayStr,
-                note: it.repeat && it.repeat !== 'none' ? `Completed (Cycle: ${it.repeat})` : 'Completed'
+                completedDate: today,
+                note: it.repeat && it.repeat !== 'none' ? `Completed (${REPEAT_LABELS[it.repeat] || it.repeat})` : 'Completed'
             });
 
             if (it.repeat && it.repeat !== 'none') {
-                it.startDate = todayStr;
-                it.targetDate = addCycleToDate(it.targetDate, it.repeat);
+                it.startDate = today;
+                let next = addCycleToDate(it.targetDate, it.repeat, it.anchorDay);
+                while (next < today) next = addCycleToDate(next, it.repeat, it.anchorDay);
+                it.targetDate = next;
             } else {
                 items.splice(idx, 1);
             }
+            bumpChanges();
             saveAll();
+            showToast('Marked as done');
         }
 
+        /* ---------- render ---------- */
         function render() {
+            updateBanner();
+
             const filterBar = document.getElementById('catFilterBar');
             const filterCats = ['All', ...cats];
             filterBar.innerHTML = filterCats.map(c => `
@@ -952,7 +1058,7 @@
                 const next = countdowns[0];
                 const dLeft = diffDaysFromToday(next.targetDate);
                 const urg = getUrgencyInfo(dLeft);
-                const pct = getProgressPct(next.startDate, next.targetDate);
+                const pct = getProgressPct(next.targetDate);
                 heroTitle.innerText = next.title;
                 heroSub.innerText = `Due: ${formatDisplayDate(next.targetDate)}`;
                 heroCat.innerText = next.category || 'General';
@@ -999,21 +1105,17 @@
             }
 
             const targetMode = currentView === 'since' ? 'since' : 'countdown';
-            let filtered = items.filter(it => {
+            const filtered = items.filter(it => {
                 if (it.mode !== targetMode) return false;
                 if (activeCatFilter !== 'All' && it.category !== activeCatFilter) return false;
                 if (searchQuery) {
-                    const hay = `${it.title} ${it.category} ${it.note || ''}`.toLowerCase();
+                    const hay = norm(`${it.title} ${it.category} ${it.note || ''}`);
                     return hay.includes(searchQuery);
                 }
                 return true;
             });
 
-            if (targetMode === 'countdown') {
-                filtered.sort((a, b) => diffDaysFromToday(a.targetDate) - diffDaysFromToday(b.targetDate));
-            } else {
-                filtered.sort((a, b) => diffDaysFromToday(a.targetDate) - diffDaysFromToday(b.targetDate));
-            }
+            filtered.sort((a, b) => diffDaysFromToday(a.targetDate) - diffDaysFromToday(b.targetDate));
 
             if (filtered.length === 0) {
                 main.innerHTML = targetMode === 'countdown'
@@ -1022,12 +1124,13 @@
                 return;
             }
 
-                       main.innerHTML = filtered.map(it => {
+            main.innerHTML = filtered.map(it => {
                 const diff = diffDaysFromToday(it.targetDate);
                 if (targetMode === 'countdown') {
                     const urg = getUrgencyInfo(diff);
-                    const pct = getProgressPct(it.startDate, it.targetDate);
-                    const doneBtnText = (it.repeat && it.repeat !== 'none') ? '✓ Done (Next)' : '✓ Done';
+                    const pct = getProgressPct(it.targetDate);
+                    const hasRepeat = it.repeat && it.repeat !== 'none';
+                    const doneBtnText = hasRepeat ? '✓ Done (Next)' : '✓ Done';
                     return `
                     <div class="item-card" style="border-left-color:${it.color || '#FADB15'};">
                         <div class="item-top" onclick="openEditor('${it.id}')">
@@ -1036,7 +1139,7 @@
                                     <span>${escapeHtml(it.title)}</span>
                                     <span class="item-cat-tag">${escapeHtml(it.category)}</span>
                                 </div>
-                                <div class="item-meta">Due: ${formatDisplayDate(it.targetDate)}${it.repeat && it.repeat !== 'none' ? ` • ↻ ${it.repeat}` : ''}</div>
+                                <div class="item-meta">Due: ${formatDisplayDate(it.targetDate)}${hasRepeat ? ` • ↻ ${REPEAT_LABELS[it.repeat] || it.repeat}` : ''}</div>
                                 ${it.note ? `<div class="item-note">${escapeHtml(it.note)}</div>` : ''}
                             </div>
                             <div class="item-right" onclick="event.stopPropagation(); toggleTimeFormat();">
@@ -1076,6 +1179,7 @@
             }).join('');
         }
 
+        /* ---------- editor ---------- */
         function populateEditorCategories(selectedCat = null) {
             const sel = document.getElementById('itemCategorySelect');
             sel.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
@@ -1124,10 +1228,11 @@
 
             if (id) {
                 const it = items.find(x => x.id === id);
+                if (!it) return;
                 document.getElementById('editorTitle').innerText = 'Edit Tracker';
                 setItemMode(it.mode || 'countdown');
                 populateEditorCategories(it.category);
-                selectedColor = it.color || COLOR_SWATCHES;
+                selectedColor = it.color || COLOR_SWATCHES[0];
                 renderColorSwatches();
                 document.getElementById('itemTitleInput').value = it.title;
                 document.getElementById('itemDateInput').value = it.targetDate;
@@ -1138,10 +1243,10 @@
                 document.getElementById('editorTitle').innerText = 'New Tracker';
                 setItemMode(currentView === 'since' ? 'since' : 'countdown');
                 populateEditorCategories();
-                selectedColor = COLOR_SWATCHES;
+                selectedColor = COLOR_SWATCHES[0];
                 renderColorSwatches();
                 document.getElementById('itemTitleInput').value = '';
-                document.getElementById('itemDateInput').value = new Date().toISOString().slice(0, 10);
+                document.getElementById('itemDateInput').value = todayISO();
                 document.getElementById('itemRepeatSelect').value = 'none';
                 document.getElementById('itemNoteInput').value = '';
                 delBtn.style.display = 'none';
@@ -1163,7 +1268,7 @@
             }
             const repeat = currentMode === 'countdown' ? document.getElementById('itemRepeatSelect').value : 'none';
             const note = document.getElementById('itemNoteInput').value.trim();
-            const todayStr = new Date().toISOString().slice(0, 10);
+            const anchorDay = parseLocalDate(targetDate).getDate();
 
             if (editingId) {
                 const it = items.find(x => x.id === editingId);
@@ -1174,6 +1279,7 @@
                     it.color = selectedColor;
                     it.targetDate = targetDate;
                     it.repeat = repeat;
+                    it.anchorDay = anchorDay;
                     it.note = note;
                 }
             } else {
@@ -1183,23 +1289,29 @@
                     title,
                     category,
                     color: selectedColor,
-                    startDate: todayStr,
+                    startDate: todayISO(),
                     targetDate,
                     repeat,
+                    anchorDay,
                     note
                 });
             }
 
+            bumpChanges();
             closeModal('editorModal');
             saveAll();
         }
 
         function deleteCurrentItem() {
             if (!editingId) return;
+            if (!confirm('Delete this item?')) return;
             items = items.filter(x => x.id !== editingId);
+            bumpChanges();
             closeModal('editorModal');
             saveAll();
         }
+
+        /* ---------- data & categories ---------- */
         function openDataModal() {
             renderCatManager();
             document.getElementById('dataModal').classList.add('open');
@@ -1260,32 +1372,41 @@
             renderCatManager();
         }
 
-        function exportData() {
-            const payload = {
-                items: items,
-                cats: cats,
-                historyLog: historyLog
-            };
-            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `gaben-aixon-backup-${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+        async function exportData() {
+            const payload = { items: items, cats: cats, historyLog: historyLog };
+            const name = `gaben-aixon-backup-${todayISO()}.json`;
+            const file = new File([JSON.stringify(payload, null, 2)], name, { type: 'application/json' });
+            try {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'Gaben Aixon backup' });
+                } else {
+                    const url = URL.createObjectURL(file);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = name;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+                localStorage.setItem(CHANGES_KEY, 0);
+                updateBanner();
+            } catch (e) { /* cancelled */ }
         }
 
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 try {
                     const data = JSON.parse(e.target.result);
                     if (data && Array.isArray(data.items)) {
                         items = data.items;
                         if (Array.isArray(data.cats) && data.cats.length > 0) cats = data.cats;
                         if (Array.isArray(data.historyLog)) historyLog = data.historyLog;
+                        items.forEach(it => {
+                            if (it.category && !cats.includes(it.category)) cats.push(it.category);
+                        });
+                        localStorage.setItem(CHANGES_KEY, 0);
                         saveAll();
                         renderCatManager();
                         closeModal('dataModal');
